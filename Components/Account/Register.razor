@@ -1,0 +1,122 @@
+@page "/account/register"
+@attribute [AllowAnonymous]
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<IdentityUser> UserManager
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+@inject ILogger<Register> Logger
+
+<PageTitle>Register</PageTitle>
+
+<h1>Register</h1>
+
+<div class="auth-panel">
+    <EditForm Model="Input" FormName="register" OnValidSubmit="RegisterUser" method="post">
+        <DataAnnotationsValidator />
+
+        @if (identityErrors.Count > 0)
+        {
+            <div class="alert alert-danger" role="alert">
+                @foreach (var error in identityErrors)
+                {
+                    <div>@error</div>
+                }
+            </div>
+        }
+
+        <ValidationSummary class="text-danger" role="alert" />
+
+        <div class="mb-3">
+            <label class="form-label" for="email">Email</label>
+            <InputText id="email" class="form-control" autocomplete="username" @bind-Value="Input!.Email" />
+            <ValidationMessage For="() => Input.Email" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="password">Password</label>
+            <InputText id="password" type="password" class="form-control" autocomplete="new-password" @bind-Value="Input!.Password" />
+            <ValidationMessage For="() => Input.Password" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label" for="confirm-password">Confirm password</label>
+            <InputText id="confirm-password" type="password" class="form-control" autocomplete="new-password" @bind-Value="Input!.ConfirmPassword" />
+            <ValidationMessage For="() => Input.ConfirmPassword" />
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+    </EditForm>
+
+    <p class="auth-switch">
+        Already have an account? <a href="@LoginUrl">Login</a>
+    </p>
+</div>
+
+@code {
+    private readonly List<string> identityErrors = [];
+
+    [SupplyParameterFromForm]
+    private RegisterInput? Input { get; set; }
+
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    private string LoginUrl => string.IsNullOrWhiteSpace(ReturnUrl)
+        ? "account/login"
+        : $"account/login?returnUrl={Uri.EscapeDataString(ReturnUrl)}";
+
+    private async Task RegisterUser()
+    {
+        Input ??= new();
+        identityErrors.Clear();
+
+        var user = new IdentityUser
+        {
+            UserName = Input.Email,
+            Email = Input.Email
+        };
+
+        var result = await UserManager.CreateAsync(user, Input.Password);
+        if (!result.Succeeded)
+        {
+            identityErrors.AddRange(result.Errors.Select(error => error.Description));
+            return;
+        }
+
+        Logger.LogInformation("User created a new account with password.");
+        await SignInManager.SignInAsync(user, isPersistent: false);
+        NavigationManager.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl))
+        {
+            return "/";
+        }
+
+        return Uri.TryCreate(ReturnUrl, UriKind.Relative, out _) ? ReturnUrl : "/";
+    }
+
+    protected override void OnInitialized()
+    {
+        Input ??= new();
+    }
+
+    private sealed class RegisterInput
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, ErrorMessage = "The password must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        public string Password { get; set; } = string.Empty;
+
+        [DataType(DataType.Password)]
+        [Compare(nameof(Password), ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}
