@@ -4,9 +4,9 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 namespace FamilyChat.SSO.ServiceCollectionExtensions
 {
-    internal static class OpenIdDictExtension
+    internal static class OpenIddictExtension
     {
-        internal static IServiceCollection ConfigureOpenIdDict(this IServiceCollection services, ConfigurationManager configuration)
+        internal static IServiceCollection ConfigureOpenIddict(this IServiceCollection services, ConfigurationManager configuration)
         {
             services.AddDbContext<AppDbContext>(options =>
             {
@@ -66,6 +66,8 @@ namespace FamilyChat.SSO.ServiceCollectionExtensions
                         options.UseLocalServer();
                         options.UseAspNetCore();
                     });
+
+            services.AddHostedService<OpenIddictSeeder>();
 
             return services;
         }

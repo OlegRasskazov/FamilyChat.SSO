@@ -4,13 +4,11 @@
 @using Microsoft.AspNetCore.Identity
 @inject SignInManager<IdentityUser> SignInManager
 @inject NavigationManager NavigationManager
-@inject ILogger<Login> Logger
 
 <PageTitle>Login</PageTitle>
 
-<h1>Login</h1>
-
-<div class="auth-panel">
+<h1 style="text-align:center">Login</h1>
+    <div class="auth-panel">
     <EditForm Model="Input" FormName="login" OnValidSubmit="LoginUser" method="post">
         <DataAnnotationsValidator />
 
@@ -71,14 +69,12 @@
 
         if (result.Succeeded)
         {
-            Logger.LogInformation("User logged in.");
             NavigationManager.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
             return;
         }
 
         if (result.IsLockedOut)
         {
-            Logger.LogWarning("User account locked out.");
             errorMessage = "This account is locked out. Please try again later.";
             return;
         }

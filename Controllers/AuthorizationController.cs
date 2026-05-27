@@ -62,6 +62,8 @@ namespace FamilyChat.SSO.Controllers
             }
 
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
+            var identity = (ClaimsIdentity)principal.Identity!;
+            identity.SetClaim(OpenIddictConstants.Claims.Subject, user.Id);
             principal.SetScopes(request.GetScopes());
             principal.SetResources(await GetResourcesAsync(principal.GetScopes()));
 

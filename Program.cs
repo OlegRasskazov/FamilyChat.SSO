@@ -16,7 +16,9 @@ namespace FamilyChat.SSO
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddCascadingAuthenticationState();
-            builder.Services.AddControllers();
+            
+            builder.Services.AddControllersWithViews();
+            
             builder.Services.AddHttpContextAccessor();
 
 
@@ -28,10 +30,11 @@ namespace FamilyChat.SSO
             {
                 options.LoginPath = "/account/login";
                 options.LogoutPath = "/account/logout";
-                options.AccessDeniedPath = "/account/access-denied";
+                options.AccessDeniedPath = "/account/access-denied";    
             });
 
-            builder.Services.ConfigureOpenIdDict(builder.Configuration);
+            builder.Services.ConfigureOpenIddict(builder.Configuration);
+
 
             var app = builder.Build();
 
@@ -45,7 +48,7 @@ namespace FamilyChat.SSO
                     context.Database.MigrateAsync().Wait();
             }
 
-            app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+            //app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
             app.UseHttpsRedirection();
 
             app.UseAntiforgery();
@@ -54,6 +57,7 @@ namespace FamilyChat.SSO
             app.UseAuthorization();
 
             app.MapControllers();
+
             app.MapDefaultControllerRoute();
 
             app.MapStaticAssets();
