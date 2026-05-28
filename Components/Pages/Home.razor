@@ -1,1 +1,32 @@
 ﻿@page "/"
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+
+<AuthorizeView>
+    <Authorized Context="authState">
+        <button class="btn btn-primary" @onclick="Logout">Logout</button>
+        <div>
+            <p>You are signed in as @authState.User.Identity?.Name.</p>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated != true)
+        {
+            var returnUrl = Uri.EscapeDataString(
+                NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+
+            NavigationManager.NavigateTo($"/account/login?returnUrl=/{returnUrl}", forceLoad: true);
+        }
+    }
+
+    private void Logout()
+    {
+        NavigationManager.NavigateTo("/account/logout", forceLoad: true);
+    }
+}
