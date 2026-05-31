@@ -1,17 +1,27 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Identity
 
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject SignInManager<IdentityUser> SignInManager
 @inject NavigationManager NavigationManager
 
 <AuthorizeView>
     <Authorized Context="authState">
-        <button class="btn btn-primary" @onclick="Logout">Logout</button>
-        <div>
-            <p>You are signed in as @authState.User.Identity?.Name.</p>
+        <div class="container text-center">
+            <div class="row justify-content-md-center">
+                <div class="col-2">
+
+                    <img src="/images/home_icq.gif" class="img-fluid" />
+                    <div>
+                        <p>You are signed in as @authState.User.Identity?.Name.</p>
+                    </div>
+                    <a href="account/logout">Logout</a>
+                </div>
+            </div>
         </div>
+
     </Authorized>
 </AuthorizeView>
-
 @code {
     protected override async Task OnInitializedAsync()
     {
@@ -23,10 +33,5 @@
 
             NavigationManager.NavigateTo($"/account/login?returnUrl=/{returnUrl}", forceLoad: true);
         }
-    }
-
-    private void Logout()
-    {
-        NavigationManager.NavigateTo("/account/logout", forceLoad: true);
     }
 }

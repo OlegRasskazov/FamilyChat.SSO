@@ -3,7 +3,7 @@ using static System.Net.Mime.MediaTypeNames;
 
 namespace FamilyChat.SSO.ServiceCollectionExtensions
 {
-    public class OpenIddictSeeder: IHostedService
+    public class OpenIddictSeeder : IHostedService
     {
         private readonly IServiceProvider _serviceProvider;
 
@@ -19,10 +19,6 @@ namespace FamilyChat.SSO.ServiceCollectionExtensions
                 ConsentType = OpenIddictConstants.ConsentTypes.Explicit,
                 ClientType = OpenIddictConstants.ClientTypes.Public,
                 DisplayName = "FamilyChat Angular Client",
-                PostLogoutRedirectUris =
-                    {
-                        new Uri("https://localhost:4200/signout-callback-oidc")
-                    },
                 RedirectUris =
                     {
                         new Uri("https://localhost:4200/signin-callback-oidc")

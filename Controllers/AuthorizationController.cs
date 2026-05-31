@@ -77,17 +77,12 @@ namespace FamilyChat.SSO.Controllers
 
         [HttpGet("~/connect/logout")]
         [HttpPost("~/connect/logout")]
-        [IgnoreAntiforgeryToken]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
-            var request = HttpContext.GetOpenIddictServerRequest();
-
             await _signInManager.SignOutAsync();
 
-            return SignOut(new AuthenticationProperties
-            {
-                RedirectUri = request?.PostLogoutRedirectUri ?? "/"
-            }, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+            return SignOut(authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
         }
 
         [Authorize(AuthenticationSchemes = OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)]

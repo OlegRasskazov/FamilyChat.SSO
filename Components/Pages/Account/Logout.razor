@@ -1,0 +1,29 @@
+@page "/account/logout"
+
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+@inject NavigationManager NavigationManager
+
+<PageTitle>Logout</PageTitle>
+
+<h1>Logout</h1>
+
+
+@code {
+    [SupplyParameterFromQuery]
+    private string? ReturnUrl { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SignInManager.SignOutAsync();
+        if (ReturnUrl is null)
+            NavigationManager.NavigateTo("/", forceLoad: true);
+        NavigationManager.NavigateTo(GetSafeReturnUrl(), forceLoad: true);
+    }
+
+    private string GetSafeReturnUrl()
+    {
+        if (string.IsNullOrWhiteSpace(ReturnUrl)) return "/";
+        return Uri.TryCreate(ReturnUrl, UriKind.Relative, out _) ? ReturnUrl : "/";
+    }
+}
