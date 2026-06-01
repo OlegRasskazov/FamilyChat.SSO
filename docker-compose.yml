@@ -1,0 +1,56 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: familychat.postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      POSTGRES_DB: postgres
+
+      POSTGRES_APP_DB: ${POSTGRES_APP_DB}
+      POSTGRES_APP_USER: ${POSTGRES_APP_USER}
+      POSTGRES_APP_PASSWORD: ${POSTGRES_APP_PASSWORD}
+    volumes:
+      - familychat_postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_APP_USER} -d ${POSTGRES_APP_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  familychat.sso:
+    image: familychat-sso:${IMAGE_TAG:-latest}
+    container_name: familychat.sso
+    build:
+      context: ./FamilyChat.SSO
+      dockerfile: Dockerfile
+      args:
+        BUILD_CONFIGURATION: ${BUILD_CONFIGURATION:-Release}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ConnectionStrings__postgresql: Host=postgres;Port=5432;Database=${POSTGRES_APP_DB};Username=${POSTGRES_APP_USER};Password=${POSTGRES_APP_PASSWORD}
+    expose:
+      - "8080"
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: familychat.nginx
+    restart: unless-stopped
+    depends_on:
+      - familychat.sso
+    # ports:
+      # - "80:80"
+      # - "443:443"
+    volumes:
+      - ./infra/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  familychat_postgres_data:

@@ -1,6 +1,7 @@
 using FamilyChat.SSO.Components;
 using FamilyChat.SSO.DBContext;
 using FamilyChat.SSO.ServiceCollectionExtensions;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,7 +9,7 @@ namespace FamilyChat.SSO
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -16,9 +17,9 @@ namespace FamilyChat.SSO
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
             builder.Services.AddCascadingAuthenticationState();
-            
+
             builder.Services.AddControllersWithViews();
-            
+
             builder.Services.AddHttpContextAccessor();
 
 
@@ -30,7 +31,7 @@ namespace FamilyChat.SSO
             {
                 options.LoginPath = "/account/login";
                 options.LogoutPath = "/account/logout";
-                options.AccessDeniedPath = "/account/access-denied";    
+                options.AccessDeniedPath = "/account/access-denied";
             });
 
             builder.Services.ConfigureOpenIddict(builder.Configuration);
@@ -38,19 +39,21 @@ namespace FamilyChat.SSO
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
+            });
+
             if (app.Environment.IsDevelopment())
             {
                 //app.UseExceptionHandler("/Error");
                 using var scope = app.Services.CreateAsyncScope();
-                    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                    context.Database.EnsureCreatedAsync().Wait();
-                    context.Database.MigrateAsync().Wait();
+                var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                app.Logger.LogInformation($"Connectionstring: {builder.Configuration.GetConnectionString("postgresql") ?? "null"}");
+                await context.Database.MigrateAsync();
             }
 
             app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
-            app.UseHttpsRedirection();
-
 
             app.UseAuthentication();
             app.UseAuthorization();

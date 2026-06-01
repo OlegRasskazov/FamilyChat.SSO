@@ -1,0 +1,26 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: familychat.postgres
+    environment:
+      POSTGRES_DB: family_chat_sso
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - familychat_postgres_data:/var/lib/postgresql/data
+
+  familychat.sso:
+    image: familychatsso
+    build:
+      context: FamilyChat.SSO
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - postgres
+    environment:
+      - ConnectionStrings__postgresql=Host=postgres;Port=5432;Database=family_chat_sso;Username=postgres;Password=postgres
+
+volumes:
+  familychat_postgres_data:
+    
